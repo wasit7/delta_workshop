@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: microservice-config
+  namespace: delta-ev-platform
+data:
+  # Internal DNS names provided by K8s Services
+  INVENTORY_SVC_URL: "http://ev-inventory"
+  PRICING_SVC_URL: "http://ev-pricing"
+  ENV_TYPE: "staging"

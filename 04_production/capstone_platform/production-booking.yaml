@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: booking-prod
+  namespace: delta-ev-platform
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ev-booking-prod
+  template:
+    metadata:
+      labels:
+        app: ev-booking-prod
+    spec:
+      containers:
+      - name: api
+        image: python:3.9-slim
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo "Starting Production Booking API..."
+            # Simulate app with a /health endpoint
+            while true; do echo -e "HTTP/1.1 200 OK\n\nOK" | nc -l -p 8000; done
+        ports:
+        - containerPort: 8000
+        # --- PRODUCTION UPGRADE: RESOURCE LIMITS ---
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        # --- PRODUCTION UPGRADE: SELF-HEALING ---
+        livenessProbe:
+          exec:
+            command:
+            - cat
+            - /tmp/healthy # File doesn't exist? Crash! (For simulation)
+          # In real life, use httpGet
+          # httpGet:
+          #   path: /health
+          #   port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5

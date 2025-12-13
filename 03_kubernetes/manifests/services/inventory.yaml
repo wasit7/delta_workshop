@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-deploy
+  namespace: delta-ev-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ev-inventory
+  template:
+    metadata:
+      labels:
+        app: ev-inventory
+    spec:
+      containers:
+      - name: api
+        image: python:3.9-slim
+        # Simulating a FastAPI App
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo "Starting Inventory Service..."
+            # Create a fake server responding on port 8000
+            while true; do echo -e "HTTP/1.1 200 OK\n\n{\"cars\": [\"Tesla\", \"BYD\"]}" | nc -l -p 8000; done
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ev-inventory
+  namespace: delta-ev-platform
+spec:
+  type: ClusterIP  # Internal only
+  selector:
+    app: ev-inventory
+  ports:
+    - port: 80
+      targetPort: 8000

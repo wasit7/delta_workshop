@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: booking-deploy
+  namespace: delta-ev-platform
+spec:
+  replicas: 2 # Scaled for availability
+  selector:
+    matchLabels:
+      app: ev-booking
+  template:
+    metadata:
+      labels:
+        app: ev-booking
+    spec:
+      containers:
+      - name: api
+        image: python:3.9-slim
+        # This service effectively proxies to the others (simulated logic)
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo "Starting Booking Aggregator..."
+            # In a real app, this would use the env vars to call Inventory
+            while true; do echo -e "HTTP/1.1 200 OK\n\n{\"status\": \"Booking Confirmed\", \"inventory_source\": \"$INVENTORY_SVC_URL\"}" | nc -l -p 8000; done
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: microservice-config
+        - secretRef:
+            name: app-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ev-booking
+  namespace: delta-ev-platform
+spec:
+  type: NodePort # External Access
+  selector:
+    app: ev-booking
+  ports:
+    - port: 80
+      targetPort: 8000
+      nodePort: 30007
