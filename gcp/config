@@ -1,33 +1,54 @@
 Host vm-1
-    HostName 34.142.128.188
+    HostName 34.87.140.43
     User student
     IdentityFile ~/.ssh/workshop_key
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
 
 Host vm-2
-    HostName 34.142.140.61
+    HostName 35.198.224.62
     User student
     IdentityFile ~/.ssh/workshop_key
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
 
 Host vm-3
-    HostName 35.198.203.176
+    HostName 35.247.180.192
     User student
     IdentityFile ~/.ssh/workshop_key
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
 
 Host vm-4
-    HostName 34.143.253.227
+    HostName 34.87.96.6
     User student
     IdentityFile ~/.ssh/workshop_key
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
 
 Host vm-5
-    HostName 34.177.86.156
+    HostName 35.240.228.1
+    User student
+    IdentityFile ~/.ssh/workshop_key
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+
+Host vm-6
+    HostName 35.247.128.182
+    User student
+    IdentityFile ~/.ssh/workshop_key
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+
+Host vm-7
+    HostName 34.126.171.205
+    User student
+    IdentityFile ~/.ssh/workshop_key
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+
+Host vm-8
+    HostName 34.142.248.206
     User student
     IdentityFile ~/.ssh/workshop_key
     StrictHostKeyChecking no
