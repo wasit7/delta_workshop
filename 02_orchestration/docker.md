@@ -1,5 +1,3 @@
-Here is the full text of the **Containerization Guide: Docker & Podman** tutorial, as requested:
-
 # Containerization Guide: Docker & Podman
 
 ## 1\. Introduction
@@ -180,28 +178,146 @@ docker run -p 8080:8000 my-python-app
 
 *You can now visit `http://localhost:8080` in your browser.*
 
-### 5.3 Advanced: Podman Pods (Sidecar Pattern)
 
-This example demonstrates Podman's ability to run multiple containers in a single "Pod," sharing the same network namespace (localhost). We will run a main application server and a separate "sidecar" container that checks the network.
+This tutorial guides you through installing Podman on an Ubuntu VM, configuring it to run smoothly without root privileges ("rootless"), and running your Python application.
 
-**1. Create a Pod**
+# PODMAN
+### Phase 1: Installation & Setup
 
-```bash
-podman pod create --name my-web-pod -p 8081:80
-```
+#### 1\. Install Podman
 
-**2. Run Nginx inside the Pod**
-This container listens on port 80 inside the pod.
+Update your package lists and install the Podman package.
 
 ```bash
-podman run -d --pod my-web-pod --name web-server nginx:alpine
+sudo apt-get update
+sudo apt-get install -y podman
 ```
 
-**3. Run a Client inside the *same* Pod**
-Because they share the pod, this second container can talk to Nginx via `localhost`, even though they are separate containers.
+Check the version to verify it was installed:
 
 ```bash
-podman run --rm --pod my-web-pod curlimages/curl http://localhost
+podman --version
 ```
 
-*Result: You will see the HTML output of the Nginx welcome page, proving the two containers are sharing the network stack.*
+#### 2\. Fix the "Lingering" Warning
+
+As you saw in your logs (`WARN... cgroupv2 manager`), Podman needs your user session to stay active even if you aren't logged in, so it can manage background containers.
+
+Run this command to enable "lingering" for your current user:
+
+```bash
+loginctl enable-linger $USER
+```
+
+*(You do not need `sudo` for this if it's for your own user, but if it fails, try `sudo loginctl enable-linger $(whoami)`).*
+
+#### 3\. Fix the "Short Name" Error (Permanent Fix)
+
+Podman is strict about where it downloads images. By default, it doesn't assume you want "Docker Hub" when you type `python:3.9`. You have two choices:
+
+  * **Option A:** Always type `docker.io/python:3.9`
+  * **Option B (Recommended):** Configure Podman to look at Docker Hub automatically.
+
+To do Option B, edit the registries configuration file:
+
+```bash
+sudo nano /etc/containers/registries.conf
+```
+
+Scroll to the bottom (or look for `unqualified-search-registries`) and ensure it looks like this:
+
+```toml
+unqualified-search-registries = ["docker.io"]
+```
+
+*Save the file (Ctrl+O, Enter) and Exit (Ctrl+X).*
+
+-----
+
+### Phase 2: Building Your Project
+
+Now we will build the Python project you shared earlier.
+
+#### 1\. Prepare the Dockerfile
+
+Since we configured the registry in step 3 above, you can leave your Dockerfile exactly as it is\!
+
+**Dockerfile:**
+
+```dockerfile
+FROM python:3.9-slim
+WORKDIR /app
+COPY . /app
+EXPOSE 8000
+CMD ["python", "app.py"]
+```
+
+#### 2\. Build the Image
+
+Build the image using `podman build`. Note that Podman doesn't need `sudo`.
+
+```bash
+podman build -t my-python-app .
+```
+
+*Success Indicator:* You should see `STEP 5/5: CMD ["python", "app.py"]` followed by a Commit ID.
+
+-----
+
+### Phase 3: Running and Testing
+
+#### 1\. Run the Container
+
+We will run the container in "detached" mode (`-d`) so it runs in the background, and we will map the port (`-p`).
+
+```bash
+podman run -d -p 8000:8000 --name my-container my-python-app
+```
+
+  * `-d`: Detached mode (runs in background).
+  * `--name`: Gives the container a friendly name so it's easier to stop later.
+  * `-p 8000:8000`: Maps port 8000 on the VM to port 8000 in the container.
+
+#### 2\. Verify it is running
+
+Check the status of your containers:
+
+```bash
+podman ps
+```
+
+You should see your container listed with status `Up`.
+
+#### 3\. Test the Response
+
+Since this is a VM, you can test it locally using `curl`:
+
+```bash
+curl http://localhost:8000
+```
+
+**Expected Output:**
+
+> Hello from inside the container\!
+
+-----
+
+### Phase 4: Managing Containers (Cheatsheet)
+
+Here are the common commands you will need to manage your app.
+
+| Action | Command |
+| :--- | :--- |
+| **Stop the app** | `podman stop my-container` |
+| **Start it again** | `podman start my-container` |
+| **Remove the container** | `podman rm my-container` |
+| **View logs** | `podman logs my-container` |
+| **Remove the image** | `podman rmi my-python-app` |
+
+### Troubleshooting: "Permission Denied" on Port 80
+
+If you try to change your code to run on port **80** (standard HTTP), Podman will fail.
+
+  * **Reason:** Regular users (non-root) cannot use ports below 1024.
+  * **Fix:** Keep your app on port 8000 inside the container. If you need to expose it on port 80 to the outside world, you typically use Nginx or Apache as a reverse proxy, or use `sudo podman ...` (though running as root defeats the security benefits of Podman).
+
