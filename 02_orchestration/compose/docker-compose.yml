@@ -1,0 +1,13 @@
+version: '3.7'
+
+services:
+  users-app:
+    build: .
+    container_name: fastapi-users
+    # Volume: Maps current folder (.) on VM to /app inside container
+    volumes:
+      - .:/app
+    # Command: "dev" mode enables hot reload. "--host 0.0.0.0" is REQUIRED to access it from outside.
+    command: ["fastapi", "dev", "service_users.py", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8001:8000"
