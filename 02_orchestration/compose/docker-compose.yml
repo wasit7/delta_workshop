@@ -1,13 +1,26 @@
-version: '3.7'
+version: '3.8'
 
 services:
+  # App 1: User Service (Runs on Port 8001)
   users-app:
     build: .
     container_name: fastapi-users
-    # Volume: Maps current folder (.) on VM to /app inside container
-    volumes:
-      - .:/app
-    # Command: "dev" mode enables hot reload. "--host 0.0.0.0" is REQUIRED to access it from outside.
-    command: ["fastapi", "dev", "service_users.py", "--host", "0.0.0.0", "--port", "8000"]
+    command: ["fastapi", "run", "service_users.py", "--port", "8000"]
     ports:
       - "8001:8000"
+
+  # App 2: Product Service (Runs on Port 8002)
+  products-app:
+    build: .
+    container_name: fastapi-products
+    command: ["fastapi", "run", "service_products.py", "--port", "8000"]
+    ports:
+      - "8002:8000"
+
+  # App 3: Order Service (Runs on Port 8003)
+  orders-app:
+    build: .
+    container_name: fastapi-orders
+    command: ["fastapi", "run", "service_orders.py", "--port", "8000"]
+    ports:
+      - "8003:8000"

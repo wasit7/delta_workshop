@@ -25,7 +25,8 @@ gcloud compute instances list \
             echo "    UserKnownHostsFile /dev/null"
             echo ""
         fi
-    done
+    done \
+2>&1 | tee config
 
 echo "===================================================="
 echo "⚠️  WINDOWS USERS:"
